@@ -3,31 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Approval Tracker</title>
+    <title>Professional Approval Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #f8fafc;
         }
-        /* Custom scrollbar for table container */
-        .table-container::-webkit-scrollbar {
+        /* Custom scrollbar for a professional look */
+        ::-webkit-scrollbar {
+            width: 8px;
             height: 8px;
         }
-        .table-container::-webkit-scrollbar-track {
-            background: #f1f1f1; 
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
             border-radius: 4px;
         }
-        .table-container::-webkit-scrollbar-thumb {
+        ::-webkit-scrollbar-thumb {
             background: #cbd5e1; 
             border-radius: 4px;
         }
-        .table-container::-webkit-scrollbar-thumb:hover {
+        ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; 
         }
         
-        /* Modal transition */
         .modal-active {
             opacity: 1;
             pointer-events: auto;
@@ -36,113 +55,212 @@
             opacity: 0;
             pointer-events: none;
         }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
-<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col font-sans">
 
-    <!-- Name Input Modal (Used instead of prompt()) -->
-    <div id="nameModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center transition-opacity duration-300 z-50 modal-hidden backdrop-blur-sm px-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform transition-all">
+    <!-- Name Input Modal -->
+    <div id="nameModal" class="fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center transition-opacity duration-300 z-50 modal-hidden backdrop-blur-sm px-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform transition-all border border-slate-100">
             <div class="text-center mb-6">
-                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
+                <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800">Welcome!</h2>
-                <p class="text-gray-500 mt-2">Please enter your name to personalize your tracker.</p>
+                <h2 class="text-2xl font-bold text-slate-800">Welcome to Dashboard</h2>
+                <p class="text-slate-500 mt-2 text-sm">Please enter your name to personalize your experience.</p>
             </div>
             <div class="space-y-4">
-                <input type="text" id="nameInput" placeholder="e.g. Alex Doe" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" autocomplete="off">
-                <button id="saveNameBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-lg">
-                    Save & Continue
+                <input type="text" id="nameInput" placeholder="e.g. Jane Doe" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-slate-700 bg-slate-50" autocomplete="off">
+                <button id="saveNameBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Continue to Dashboard
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Main Application UI -->
-    <div id="appContainer" class="flex-grow flex flex-col max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 hidden">
+    <div id="appContainer" class="flex-grow flex flex-col hidden">
         
-        <!-- Header -->
-        <header class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">Daily Tracker</h1>
-                <p class="text-gray-500 flex items-center gap-2 mt-1">
-                    Good to see you, <span id="displayName" class="font-semibold text-blue-600">User</span>!
-                    <button id="editNameBtn" class="text-gray-400 hover:text-blue-600 transition-colors" title="Edit Name">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+        <!-- Top Navigation -->
+        <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 glass-panel">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Approval Hub</h1>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="hidden md:block text-right">
+                            <p class="text-sm font-medium text-slate-900" id="displayName">User</p>
+                            <p class="text-xs text-slate-500" id="currentDateDisplay">Loading date...</p>
+                        </div>
+                        <button id="editNameBtn" class="bg-slate-100 p-2 rounded-full text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Edit Profile">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                
+                <!-- Left Column: Data Entry Form (Spans 4 cols on large screens) -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            New Entry
+                        </h2>
+                        
+                        <form id="recordForm" class="space-y-5">
+                            <div>
+                                <label for="taskName" class="block text-sm font-medium text-slate-700 mb-1">Task or Person Name</label>
+                                <input type="text" id="taskName" required placeholder="Enter details..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <label class="flex-1 cursor-pointer">
+                                        <input type="radio" name="taskStatus" value="Approve" required class="peer sr-only">
+                                        <div class="px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:ring-1 peer-checked:ring-emerald-500 transition-all text-center">
+                                            <span class="text-sm font-medium text-slate-600 peer-checked:text-emerald-700">Approve</span>
+                                        </div>
+                                    </label>
+                                    <label class="flex-1 cursor-pointer">
+                                        <input type="radio" name="taskStatus" value="Reject" required class="peer sr-only">
+                                        <div class="px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 peer-checked:bg-rose-50 peer-checked:border-rose-500 peer-checked:ring-1 peer-checked:ring-rose-500 transition-all text-center">
+                                            <span class="text-sm font-medium text-slate-600 peer-checked:text-rose-700">Reject</span>
+                                        </div>
+                                    </label>
+                                    <label class="flex-1 cursor-pointer">
+                                        <input type="radio" name="taskStatus" value="Already Approved" required class="peer sr-only">
+                                        <div class="px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 transition-all text-center">
+                                            <span class="text-sm font-medium text-slate-600 peer-checked:text-blue-700">Already Apprv.</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                Save Record
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Today's Quick Stats Widget -->
+                    <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl shadow-sm border border-indigo-600 p-6 text-white">
+                        <h3 class="text-sm font-medium text-indigo-100 mb-4 uppercase tracking-wider">Today's Snapshot</h3>
+                        <div class="grid grid-cols-3 gap-4 text-center divide-x divide-indigo-400/50">
+                            <div>
+                                <p class="text-2xl font-bold" id="statTodayApprove">0</p>
+                                <p class="text-xs text-indigo-100 mt-1">Approved</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold" id="statTodayReject">0</p>
+                                <p class="text-xs text-indigo-100 mt-1">Rejected</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold" id="statTodayAlready">0</p>
+                                <p class="text-xs text-indigo-100 mt-1">Pre-Apprv</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Daily Summary (Spans 8 cols on large screens) -->
+                <div class="lg:col-span-8">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                            <h2 class="text-lg font-bold text-slate-800">Daily Summary</h2>
+                            <p class="text-xs text-slate-500 mt-1">Aggregate counts of all statuses grouped by date.</p>
+                        </div>
+                        
+                        <div class="overflow-x-auto flex-grow">
+                            <table class="w-full text-left border-collapse min-w-[500px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                        <th class="py-3 px-5 font-semibold">Date</th>
+                                        <th class="py-3 px-5 font-semibold text-emerald-600">Approved</th>
+                                        <th class="py-3 px-5 font-semibold text-rose-600">Rejected</th>
+                                        <th class="py-3 px-5 font-semibold text-blue-600">Already Apprv.</th>
+                                        <th class="py-3 px-5 font-semibold text-slate-600">Total Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summaryTableBody" class="divide-y divide-slate-100 text-sm">
+                                    <!-- Summary Rows Populated by JS -->
+                                </tbody>
+                            </table>
+                            <div id="summaryEmptyState" class="hidden flex-col items-center justify-center p-8 text-slate-400">
+                                <p class="text-sm">No summaries available yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Width: Detailed Records Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Detailed Records Log</h2>
+                        <p class="text-xs text-slate-500 mt-1">Comprehensive list of every individual entry.</p>
+                    </div>
+                    <button id="exportBtn" class="flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
+                        Export CSV
                     </button>
-                </p>
-            </div>
-            <div class="text-right">
-                <p class="text-sm text-gray-500 font-medium" id="currentDateDisplay">Loading date...</p>
-            </div>
-        </header>
-
-        <!-- Action Area -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            <button id="approveBtn" class="group relative overflow-hidden bg-white border-2 border-emerald-500 hover:bg-emerald-50 text-emerald-600 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-all active:scale-95 shadow-sm hover:shadow-md">
-                <div class="bg-emerald-100 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
-                    <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
                 </div>
-                <span class="text-xl font-bold">Approve</span>
-            </button>
-            
-            <button id="rejectBtn" class="group relative overflow-hidden bg-white border-2 border-rose-500 hover:bg-rose-50 text-rose-600 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-all active:scale-95 shadow-sm hover:shadow-md">
-                <div class="bg-rose-100 p-3 rounded-full group-hover:scale-110 transition-transform duration-300">
-                    <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </div>
-                <span class="text-xl font-bold">Reject</span>
-            </button>
-        </div>
-
-        <!-- Table & Export Area -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-grow flex flex-col">
-            <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 class="text-lg font-bold text-gray-800">History Log</h2>
-                <button id="exportBtn" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Export to Excel
-                </button>
-            </div>
-            
-            <div class="table-container overflow-x-auto p-0 flex-grow">
-                <table class="w-full text-left border-collapse min-w-[500px]">
-                    <thead>
-                        <tr class="bg-gray-50 text-gray-500 text-sm uppercase tracking-wider">
-                            <th class="py-4 px-6 font-semibold">Date</th>
-                            <th class="py-4 px-6 font-semibold text-emerald-600">Approved</th>
-                            <th class="py-4 px-6 font-semibold text-rose-600">Rejected</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody" class="divide-y divide-gray-100 text-gray-700">
-                        <!-- Rows will be populated by JavaScript -->
-                    </tbody>
-                </table>
-                <div id="emptyState" class="hidden flex-col items-center justify-center p-12 text-gray-400">
-                    <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                    <p>No records found. Start approving or rejecting to build your log.</p>
+                
+                <div class="overflow-x-auto max-h-[500px]">
+                    <table class="w-full text-left border-collapse min-w-[600px] relative">
+                        <thead class="sticky top-0 bg-white shadow-sm z-10">
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-4 px-6 font-semibold w-1/4">Date</th>
+                                <th class="py-4 px-6 font-semibold w-2/4">Task / Person Name</th>
+                                <th class="py-4 px-6 font-semibold w-1/4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailsTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Details Rows Populated by JS -->
+                        </tbody>
+                    </table>
+                    <div id="detailsEmptyState" class="hidden flex-col items-center justify-center p-16 text-slate-400">
+                        <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>No records found. Submit a new entry above to begin.</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        // Data State
-        let userName = localStorage.getItem('trackerUserName') || '';
-        // Records structured as: { "YYYY-MM-DD": { approved: 0, rejected: 0 } }
-        let records = JSON.parse(localStorage.getItem('trackerRecords')) || {};
+        // State Management
+        let userName = localStorage.getItem('dashboardUserName') || '';
+        // Records structured as Array of objects: [{ id, name, date, status, timestamp }]
+        let records = JSON.parse(localStorage.getItem('dashboardRecords')) || [];
 
         // DOM Elements
         const nameModal = document.getElementById('nameModal');
@@ -152,20 +270,22 @@
         const displayName = document.getElementById('displayName');
         const editNameBtn = document.getElementById('editNameBtn');
         const currentDateDisplay = document.getElementById('currentDateDisplay');
-        const approveBtn = document.getElementById('approveBtn');
-        const rejectBtn = document.getElementById('rejectBtn');
-        const tableBody = document.getElementById('tableBody');
-        const emptyState = document.getElementById('emptyState');
+        
+        const recordForm = document.getElementById('recordForm');
+        const taskNameInput = document.getElementById('taskName');
+        
+        const summaryTableBody = document.getElementById('summaryTableBody');
+        const summaryEmptyState = document.getElementById('summaryEmptyState');
+        const detailsTableBody = document.getElementById('detailsTableBody');
+        const detailsEmptyState = document.getElementById('detailsEmptyState');
         const exportBtn = document.getElementById('exportBtn');
 
-        // Helper: Format Date to display elegantly
-        function getDisplayDate(dateStr) {
-            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-            // Ensure local timezone parsing by appending time
-            return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, options);
-        }
+        // Dashboard Stat Elements
+        const statTodayApprove = document.getElementById('statTodayApprove');
+        const statTodayReject = document.getElementById('statTodayReject');
+        const statTodayAlready = document.getElementById('statTodayAlready');
 
-        // Helper: Get Current Date in YYYY-MM-DD local timezone format
+        // Helpers
         function getTodayString() {
             const d = new Date();
             const year = d.getFullYear();
@@ -174,22 +294,30 @@
             return `${year}-${month}-${day}`;
         }
 
-        // Update UI Display Date
+        function formatDisplayDate(dateStr) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, options);
+        }
+        
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Initialize Header Date
         currentDateDisplay.textContent = new Date().toLocaleDateString(undefined, { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
         });
 
-        // App Initialization
+        // Initialization & Modals
         function initApp() {
             if (!userName) {
                 showModal();
             } else {
                 showApp();
             }
-            renderTable();
+            updateDashboard();
         }
 
-        // Modal Logic
         function showModal() {
             nameInput.value = userName;
             nameModal.classList.remove('modal-hidden');
@@ -210,12 +338,11 @@
             appContainer.classList.add('flex');
         }
 
-        // Save Name Action
         function saveName() {
             const inputVal = nameInput.value.trim();
             if (inputVal) {
                 userName = inputVal;
-                localStorage.setItem('trackerUserName', userName);
+                localStorage.setItem('dashboardUserName', userName);
                 showApp();
             }
         }
@@ -226,110 +353,161 @@
         });
         editNameBtn.addEventListener('click', showModal);
 
-
-        // Core Logic: Add Action (Approve/Reject)
-        function handleAction(type) {
-            const today = getTodayString();
-
-            // Initialize today's record if it doesn't exist
-            if (!records[today]) {
-                records[today] = { approved: 0, rejected: 0 };
-            }
-
-            // Increment specific counter
-            if (type === 'approve') {
-                records[today].approved++;
-            } else if (type === 'reject') {
-                records[today].rejected++;
-            }
-
-            // Persist and Render
-            localStorage.setItem('trackerRecords', JSON.stringify(records));
-            renderTable();
+        // Form Handling
+        recordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
             
-            // Visual feedback on row
-            highlightTodayRow(today);
+            const nameVal = taskNameInput.value.trim();
+            const statusRadio = document.querySelector('input[name="taskStatus"]:checked');
+            
+            if (!nameVal || !statusRadio) return;
+
+            const statusVal = statusRadio.value;
+
+            const newRecord = {
+                id: Date.now().toString(),
+                name: nameVal,
+                status: statusVal,
+                date: getTodayString(),
+                timestamp: Date.now()
+            };
+
+            records.unshift(newRecord); // Add to beginning (newest first)
+            localStorage.setItem('dashboardRecords', JSON.stringify(records));
+            
+            // Reset form
+            taskNameInput.value = '';
+            statusRadio.checked = false;
+            taskNameInput.focus();
+
+            updateDashboard();
+            
+            // Visual feedback on the newly added row
+            setTimeout(() => {
+                const newRow = document.getElementById(`detail-row-${newRecord.id}`);
+                if (newRow) {
+                    newRow.classList.add('bg-indigo-50');
+                    setTimeout(() => newRow.classList.remove('bg-indigo-50'), 1000);
+                }
+            }, 100);
+        });
+
+        // Core Update Logic
+        function updateDashboard() {
+            const aggregatedData = aggregateRecordsByDate();
+            renderSummaryTable(aggregatedData);
+            renderDetailsTable();
+            updateTodayStats(aggregatedData);
         }
 
-        approveBtn.addEventListener('click', () => handleAction('approve'));
-        rejectBtn.addEventListener('click', () => handleAction('reject'));
+        function aggregateRecordsByDate() {
+            const summary = {};
+            records.forEach(rec => {
+                if (!summary[rec.date]) {
+                    summary[rec.date] = { Approve: 0, Reject: 0, 'Already Approved': 0, Total: 0 };
+                }
+                summary[rec.date][rec.status]++;
+                summary[rec.date].Total++;
+            });
+            return summary;
+        }
 
+        function updateTodayStats(aggregatedData) {
+            const today = getTodayString();
+            const todayData = aggregatedData[today] || { Approve: 0, Reject: 0, 'Already Approved': 0 };
+            
+            statTodayApprove.textContent = todayData.Approve;
+            statTodayReject.textContent = todayData.Reject;
+            statTodayAlready.textContent = todayData['Already Approved'];
+        }
 
-        // Render Table Data
-        function renderTable() {
-            tableBody.innerHTML = '';
-            const dates = Object.keys(records).sort((a, b) => new Date(b) - new Date(a)); // Sort descending
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'Approve':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">Approve</span>`;
+                case 'Reject':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800 border border-rose-200">Reject</span>`;
+                case 'Already Approved':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">Already Approved</span>`;
+                default:
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">${status}</span>`;
+            }
+        }
 
+        function renderSummaryTable(aggregatedData) {
+            summaryTableBody.innerHTML = '';
+            
+            const dates = Object.keys(aggregatedData).sort((a, b) => new Date(b) - new Date(a));
+            
             if (dates.length === 0) {
-                emptyState.classList.remove('hidden');
-                emptyState.classList.add('flex');
+                summaryEmptyState.classList.remove('hidden');
+                summaryEmptyState.classList.add('flex');
             } else {
-                emptyState.classList.add('hidden');
-                emptyState.classList.remove('flex');
-
+                summaryEmptyState.classList.add('hidden');
+                summaryEmptyState.classList.remove('flex');
+                
                 dates.forEach(date => {
-                    const data = records[date];
+                    const data = aggregatedData[date];
                     const isToday = date === getTodayString();
                     
                     const tr = document.createElement('tr');
-                    tr.id = `row-${date}`;
-                    tr.className = `transition-colors duration-300 hover:bg-gray-50 ${isToday ? 'bg-blue-50/30' : ''}`;
-                    
+                    tr.className = `hover:bg-slate-50 transition-colors ${isToday ? 'bg-indigo-50/30' : ''}`;
                     tr.innerHTML = `
-                        <td class="py-4 px-6 font-medium ${isToday ? 'text-blue-700' : 'text-gray-800'}">
-                            ${getDisplayDate(date)} ${isToday ? '<span class="ml-2 text-xs bg-blue-100 text-blue-700 py-1 px-2 rounded-full">Today</span>' : ''}
+                        <td class="py-3 px-5 font-medium ${isToday ? 'text-indigo-700' : 'text-slate-800'} whitespace-nowrap">
+                            ${formatDisplayDate(date)} 
+                            ${isToday ? '<span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-800">Today</span>' : ''}
                         </td>
-                        <td class="py-4 px-6 font-bold text-emerald-600 bg-emerald-50/10">${data.approved}</td>
-                        <td class="py-4 px-6 font-bold text-rose-600 bg-rose-50/10">${data.rejected}</td>
+                        <td class="py-3 px-5 font-semibold text-emerald-600">${data.Approve}</td>
+                        <td class="py-3 px-5 font-semibold text-rose-600">${data.Reject}</td>
+                        <td class="py-3 px-5 font-semibold text-blue-600">${data['Already Approved']}</td>
+                        <td class="py-3 px-5 font-bold text-slate-700">${data.Total}</td>
                     `;
-                    tableBody.appendChild(tr);
+                    summaryTableBody.appendChild(tr);
                 });
             }
         }
 
-        // Briefly highlight the row that was just updated
-        function highlightTodayRow(date) {
-            const row = document.getElementById(`row-${date}`);
-            if (row) {
-                row.classList.add('bg-blue-100');
-                setTimeout(() => {
-                    row.classList.remove('bg-blue-100');
-                }, 500);
+        function renderDetailsTable() {
+            detailsTableBody.innerHTML = '';
+            
+            if (records.length === 0) {
+                detailsEmptyState.classList.remove('hidden');
+                detailsEmptyState.classList.add('flex');
+            } else {
+                detailsEmptyState.classList.add('hidden');
+                detailsEmptyState.classList.remove('flex');
+                
+                records.forEach(rec => {
+                    const tr = document.createElement('tr');
+                    tr.id = `detail-row-${rec.id}`;
+                    tr.className = "hover:bg-slate-50 transition-colors duration-300";
+                    tr.innerHTML = `
+                        <td class="py-4 px-6 whitespace-nowrap text-slate-600">
+                            <div class="font-medium text-slate-800">${formatDisplayDate(rec.date)}</div>
+                            <div class="text-xs mt-0.5 text-slate-400">${formatTime(rec.timestamp)}</div>
+                        </td>
+                        <td class="py-4 px-6 text-slate-800 font-medium break-words max-w-xs">
+                            ${rec.name}
+                        </td>
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            ${getStatusBadge(rec.status)}
+                        </td>
+                    `;
+                    detailsTableBody.appendChild(tr);
+                });
             }
         }
 
-        // Export to Excel (CSV format)
-        function exportToCSV() {
-            const dates = Object.keys(records).sort((a, b) => new Date(b) - new Date(a));
-            
-            if (dates.length === 0) return; // Nothing to export
+        // Export Logic
+        exportBtn.addEventListener('click', () => {
+            if (records.length === 0) return;
 
-            let csvContent = "Date,Approved,Rejected\n";
+            let csvContent = "Date,Time,Task/Person Name,Status\n";
 
-            dates.forEach(date => {
-                const row = [date, records[date].approved, records[date].rejected];
+            records.forEach(rec => {
+                // Escape commas in names by wrapping in quotes
+                const safeName = `"${rec.name.replace(/"/g, '""')}"`;
+                const timeStr = formatTime(rec.timestamp);
+                const row = [rec.date, timeStr, safeName, rec.status];
                 csvContent += row.join(",") + "\n";
             });
-
-            // Create Blob and Download Link
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            
-            link.setAttribute("href", url);
-            link.setAttribute("download", `tracking_data_${getTodayString()}.csv`);
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        exportBtn.addEventListener('click', exportToCSV);
-
-        // Start Application
-        initApp();
-
-    </script>
-</body>
-</html>
